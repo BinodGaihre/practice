@@ -25,16 +25,9 @@ function buildCharts(sample) {
   d3.csv("./static/js/cleaned_data.csv").then((data) => {
     let x = [];
     let y = [];
-    let size = [];
-    let color = [];
 
     let filteredData = data.filter(function(row) {
       return row["city"] == sample;
-    });
-
-    // Filter out rows with missing data or invalid numeric values
-    filteredData = filteredData.filter(function(row) {
-      return !isNaN(row["Poverty_Rate"]) && !isNaN(row["Median_Hhold_Income"]);
     });
 
     filteredData.forEach(function(row) {
@@ -42,20 +35,38 @@ function buildCharts(sample) {
       y.push(row["Poverty_Rate"]);
       x.push(row["Median_Hhold_Income"]);
     });
-
+    
     // Building a Bubble Chart
     var trace1 = {
       x: x,
       y: y,
       mode: 'markers',
+      type: 'scatter',
       marker: {
-        size: x/100,
-        color: y,
-        colorscale : 'Rainbow'
-      }
+        size: 8,
+        color : 'blue',
+        capacity : 0.8
+      },
+      name : 'Data Points' 
     };
+    let slopeIntercept = linearReg(x,y)
+    let s = slopeIntercept.slope
+    let i = slopeIntercept.intercept
+    let xValue = [Math.min(...x), Math.max(...x)];
+    let yValue = xValue.map(value => s * value + i);
+    var trace2 = {
+      x:xValue,
+      y: yValue,
+      mode: 'lines',
+      type: 'scatter',
+      line: {
+        color: 'red',
+        width: 2
+      },
+    name: 'Regression Line'
+    }
 
-    var data1 = [trace1];
+    var data1 = [trace1, trace2];
 
     // Applying a title to the layout
     var layout1 = {
@@ -65,7 +76,7 @@ function buildCharts(sample) {
       margin: { l: 100, r: 50, t: 50, b: 50 }
     };
 
-    Plotly.newPlot('bubble', data1, layout1);
+    Plotly.newPlot('scatter', data1, layout1);
   });
 }
 
@@ -103,5 +114,17 @@ function optionChanged(newSample) {
 
 // Initialize the dashboard
 init();
+function linearReg(x,y){
 
+  const n = x.length;
+  const sum_x = math.sum(x);
+  const sum_y = math.sum(y);
+  const sum_xx = math.sum(x.map(val => val * val)); // x^2
+  const sum_xy = math.sum(x.map((val, i) => val * y[i])); // x * y
 
+  // Calculate slope (m) and intercept (b) using the normal equation
+  const slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
+  const intercept = (sum_y - slope * sum_x) / n;
+
+  return {slope, intercept};
+}
