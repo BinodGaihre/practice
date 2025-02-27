@@ -25,7 +25,8 @@ function buildCharts(sample) {
   d3.csv("./static/js/cleaned_data.csv").then((data) => {
     let x = [];
     let y = [];
-
+    let tract = [];
+    let rent = []
     let filteredData = data.filter(function(row) {
       return row["city"] == sample;
     });
@@ -34,8 +35,11 @@ function buildCharts(sample) {
       // Collect data for x (Median_Hhold_Income) and y (Poverty_Rate)
       y.push(row["Poverty_Rate"]);
       x.push(row["Median_Hhold_Income"]);
+      tract.push(row["tract"]);
+      rent.push(parseFloat(row['Median_Rent']));
     });
-    
+    console.log(tract)
+    console.log(rent)
     // Building a Bubble Chart
     var trace1 = {
       x: x,
@@ -77,6 +81,35 @@ function buildCharts(sample) {
     };
 
     Plotly.newPlot('scatter', data1, layout1);
+
+    // Building a Bar Chart
+    let trace3 = {
+      y: rent,
+      marker: {
+        color : 'green'
+      },
+      type: "bar"
+    };
+    
+    let data3 = [trace3];
+    
+    // Applying a title to the layout
+    let layout3 = {
+      title: `rent over the city ${sample}`,
+      yaxis : {title: "Rent"},
+      xaxis: {
+        title: "tract",
+      },
+      margin: {
+        l: 100,
+        r: 50,
+        t: 50,
+        b: 150
+      }, 
+    };
+    
+    // Rendering the plot to the div tag with id "plot"
+    Plotly.newPlot("bar", data3, layout3);
   });
 }
 
